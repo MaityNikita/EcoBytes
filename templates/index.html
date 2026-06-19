@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EcoBytes — Digital Carbon Footprint Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --black: #0D0D0D;
+      --white: #F5F5F0;
+      --green: #2E7D52;
+      --green-light: #4CAF7A;
+      --green-pale: #D4EDDA;
+      --green-dark: #1A4D32;
+      --green-accent: #6FCF97;
+      --border: rgba(46, 125, 82, 0.25);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Space Grotesk', sans-serif;
+      background: var(--black);
+      color: var(--white);
+      overflow-x: hidden;
+    }
+
+    /* NAV */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1.2rem 2.5rem;
+      background: rgba(13,13,13,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    .logo {
+      font-family: 'Space Mono', monospace;
+      font-size: 1.1rem;
+      letter-spacing: -0.02em;
+      color: var(--white);
+    }
+    .logo span { color: var(--green-accent); }
+    .nav-right { display: flex; align-items: center; gap: 1rem; }
+    .nav-link {
+      font-size: 0.875rem;
+      color: rgba(245,245,240,0.6);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .nav-link:hover { color: var(--white); }
+    .btn {
+      display: inline-block;
+      text-decoration: none;
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 500;
+      transition: all 0.2s;
+      cursor: pointer;
+      border: none;
+    }
+    .btn-outline {
+      padding: 0.5rem 1.1rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--white);
+      font-size: 0.875rem;
+      background: transparent;
+    }
+    .btn-outline:hover { border-color: var(--green-accent); color: var(--green-accent); }
+    .btn-green {
+      padding: 0.55rem 1.25rem;
+      background: var(--green);
+      color: var(--white);
+      border-radius: 6px;
+      font-size: 0.875rem;
+    }
+    .btn-green:hover { background: var(--green-light); }
+
+    /* HERO */
+    .hero {
+      min-height: 100vh;
+      display: flex; flex-direction: column; justify-content: center;
+      padding: 8rem 2.5rem 4rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -120px; right: -120px;
+      width: 560px; height: 560px;
+      background: radial-gradient(circle, rgba(46,125,82,0.18) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-eyebrow {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--green-accent);
+      margin-bottom: 1.5rem;
+    }
+    .hero-heading {
+      font-size: clamp(2.6rem, 6vw, 5rem);
+      font-weight: 600;
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+      max-width: 780px;
+      margin-bottom: 1.75rem;
+    }
+    .hero-heading em {
+      font-style: normal;
+      color: var(--green-accent);
+    }
+    .hero-sub {
+      font-size: 1.05rem;
+      color: rgba(245,245,240,0.6);
+      max-width: 520px;
+      line-height: 1.7;
+      margin-bottom: 2.5rem;
+    }
+    .hero-actions { display: flex; gap: 0.875rem; flex-wrap: wrap; align-items: center; }
+    .btn-hero {
+      padding: 0.75rem 1.75rem;
+      font-size: 0.95rem;
+      border-radius: 8px;
+    }
+    .hero-note {
+      margin-top: 1.5rem;
+      font-size: 0.78rem;
+      color: rgba(245,245,240,0.35);
+      font-family: 'Space Mono', monospace;
+    }
+    .hero-note span { color: var(--green-accent); }
+
+    /* TICKER BAND */
+    .ticker {
+      background: var(--green-dark);
+      border-top: 1px solid rgba(111,207,151,0.2);
+      border-bottom: 1px solid rgba(111,207,151,0.2);
+      overflow: hidden;
+      padding: 0.7rem 0;
+    }
+    .ticker-inner {
+      display: flex; gap: 0;
+      animation: ticker 28s linear infinite;
+      white-space: nowrap;
+    }
+    .ticker-item {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      padding: 0 2.5rem;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.72rem;
+      color: rgba(245,245,240,0.55);
+    }
+    .ticker-item .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--green-accent); flex-shrink: 0; }
+    @keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+
+    /* STATS */
+    .stats {
+      padding: 5rem 2.5rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1px;
+      background: var(--border);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .stat-cell {
+      background: var(--black);
+      padding: 2.5rem 2rem;
+    }
+    .stat-num {
+      font-family: 'Space Mono', monospace;
+      font-size: 2.4rem;
+      font-weight: 700;
+      color: var(--green-accent);
+      line-height: 1;
+      margin-bottom: 0.5rem;
+    }
+    .stat-label {
+      font-size: 0.82rem;
+      color: rgba(245,245,240,0.5);
+      line-height: 1.5;
+    }
+    .stat-src {
+      font-size: 0.68rem;
+      color: rgba(245,245,240,0.25);
+      margin-top: 0.4rem;
+      font-family: 'Space Mono', monospace;
+    }
+
+    /* HOW IT WORKS */
+    .section { padding: 6rem 2.5rem; }
+    .section-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--green);
+      margin-bottom: 1rem;
+    }
+    .section-heading {
+      font-size: clamp(1.7rem, 3.5vw, 2.6rem);
+      font-weight: 600;
+      letter-spacing: -0.025em;
+      line-height: 1.15;
+      max-width: 540px;
+      margin-bottom: 3.5rem;
+    }
+
+    .steps { display: flex; flex-direction: column; gap: 0; max-width: 680px; }
+    .step {
+      display: grid;
+      grid-template-columns: 52px 1fr;
+      gap: 1.25rem;
+      padding: 1.75rem 0;
+      border-bottom: 1px solid var(--border);
+      align-items: start;
+    }
+    .step:first-child { border-top: 1px solid var(--border); }
+    .step-num {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--green-accent);
+      padding-top: 3px;
+    }
+    .step-title { font-size: 1rem; font-weight: 500; margin-bottom: 0.4rem; }
+    .step-desc { font-size: 0.875rem; color: rgba(245,245,240,0.5); line-height: 1.65; }
+
+    /* FEATURES GRID */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      margin-top: 3rem;
+    }
+    .feature-cell {
+      background: var(--black);
+      padding: 2rem 1.75rem;
+      transition: background 0.2s;
+    }
+    .feature-cell:hover { background: #111; }
+    .feature-icon {
+      width: 36px; height: 36px;
+      border: 1px solid rgba(111,207,151,0.3);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 1rem;
+      color: var(--green-accent);
+      font-size: 1rem;
+    }
+    .feature-title { font-size: 0.95rem; font-weight: 500; margin-bottom: 0.5rem; }
+    .feature-desc { font-size: 0.825rem; color: rgba(245,245,240,0.45); line-height: 1.6; }
+
+    /* CATEGORIES */
+    .cat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 0.75rem;
+      margin-top: 3rem;
+    }
+    .cat-card {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.25rem;
+      display: flex; flex-direction: column; gap: 0.75rem;
+    }
+    .cat-tag {
+      display: inline-block;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: rgba(46,125,82,0.15);
+      color: var(--green-accent);
+      border: 1px solid rgba(111,207,151,0.2);
+      padding: 3px 8px;
+      border-radius: 4px;
+    }
+    .cat-name { font-size: 0.9rem; font-weight: 500; }
+    .cat-factor { font-family: 'Space Mono', monospace; font-size: 1.5rem; font-weight: 700; color: var(--green-accent); }
+    .cat-unit { font-size: 0.72rem; color: rgba(245,245,240,0.35); }
+
+    /* CTA */
+    .cta-section {
+      padding: 6rem 2.5rem;
+      border-top: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 2rem;
+    }
+    .cta-heading {
+      font-size: clamp(1.8rem, 4vw, 3rem);
+      font-weight: 600;
+      letter-spacing: -0.025em;
+      line-height: 1.1;
+      max-width: 560px;
+    }
+    .cta-heading em { font-style: normal; color: var(--green-accent); }
+    .cta-row { display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; }
+    .cta-note { font-size: 0.8rem; color: rgba(245,245,240,0.35); font-family: 'Space Mono', monospace; }
+
+    /* FOOTER */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 2rem 2.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .footer-logo {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.85rem;
+      color: rgba(245,245,240,0.4);
+    }
+    .footer-logo span { color: var(--green-accent); }
+    .footer-note { font-size: 0.72rem; color: rgba(245,245,240,0.25); }
+
+    @media (max-width: 600px) {
+      nav { padding: 1rem 1.25rem; }
+      .hero { padding: 7rem 1.25rem 3rem; }
+      .section { padding: 4rem 1.25rem; }
+      .stats { padding: 0; }
+      .stat-cell { padding: 1.75rem 1.25rem; }
+      .cta-section { padding: 4rem 1.25rem; }
+      footer { padding: 1.5rem 1.25rem; flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="logo">eco<span>bytes</span></div>
+    <div class="nav-right">
+      <a href="#how" class="nav-link">How it works</a>
+      <a href="#categories" class="nav-link">What we track</a>
+      <a href="/api/demo" class="btn btn-outline">Try demo</a>
+      
+        <a href="/dashboard" class="btn btn-green">My dashboard</a>
+      
+        <a href="/login" class="btn btn-green">Connect Google</a>
+      
+    </div>
+  </nav>
+
+  <section class="hero">
+    <p class="hero-eyebrow">digital carbon footprint tracker</p>
+    <h1 class="hero-heading">
+      Your inbox has<br>a <em>carbon cost.</em><br>Let's measure it.
+    </h1>
+    <p class="hero-sub">
+      Every email, synced file, AI query, and streamed video emits CO₂.
+      EcoBytes connects to your Google account and shows exactly where
+      your digital life is costing the planet — across every device.
+    </p>
+    <div class="hero-actions">
+      
+        <a href="/dashboard" class="btn btn-green btn-hero">Open my dashboard</a>
+      
+        <a href="/login" class="btn btn-green btn-hero">Connect with Google</a>
+      
+      <a href="/api/demo" class="btn btn-outline btn-hero">See live demo</a>
+    </div>
+    <p class="hero-note">
+      <span>Read-only access.</span> &nbsp;No data stored. &nbsp;Open source.
+    </p>
+  </section>
+
+  <div class="ticker" aria-hidden="true">
+    <div class="ticker-inner" id="ticker-inner">
+      <span class="ticker-item"><span class="dot"></span>4g CO₂e per email sent</span>
+      <span class="ticker-item"><span class="dot"></span>55g CO₂e / hr HD streaming</span>
+      <span class="ticker-item"><span class="dot"></span>4.3g CO₂e per AI query</span>
+      <span class="ticker-item"><span class="dot"></span>3g CO₂e per GB stored / year</span>
+      <span class="ticker-item"><span class="dot"></span>0.2g CO₂e per web search</span>
+      <span class="ticker-item"><span class="dot"></span>36g CO₂e / hr laptop use</span>
+      <span class="ticker-item"><span class="dot"></span>8g CO₂e / hr smartphone use</span>
+      <span class="ticker-item"><span class="dot"></span>7g CO₂e per GB data transferred</span>
+      <span class="ticker-item"><span class="dot"></span>4g CO₂e per email sent</span>
+      <span class="ticker-item"><span class="dot"></span>55g CO₂e / hr HD streaming</span>
+      <span class="ticker-item"><span class="dot"></span>4.3g CO₂e per AI query</span>
+      <span class="ticker-item"><span class="dot"></span>3g CO₂e per GB stored / year</span>
+      <span class="ticker-item"><span class="dot"></span>0.2g CO₂e per web search</span>
+      <span class="ticker-item"><span class="dot"></span>36g CO₂e / hr laptop use</span>
+      <span class="ticker-item"><span class="dot"></span>8g CO₂e / hr smartphone use</span>
+      <span class="ticker-item"><span class="dot"></span>7g CO₂e per GB data transferred</span>
+    </div>
+  </div>
+
+  <section class="stats">
+    <div class="stat-cell">
+      <div class="stat-num">~50kg</div>
+      <div class="stat-label">average digital CO₂e per person per month</div>
+      <div class="stat-src">BCG Digital Carbon Study, 2022</div>
+    </div>
+    <div class="stat-cell">
+      <div class="stat-num">4%</div>
+      <div class="stat-label">of global emissions come from digital activity</div>
+      <div class="stat-src">Shift Project, 2021</div>
+    </div>
+    <div class="stat-cell">
+      <div class="stat-num">300bn</div>
+      <div class="stat-label">emails sent every day worldwide</div>
+      <div class="stat-src">Statista, 2023</div>
+    </div>
+    <div class="stat-cell">
+      <div class="stat-num">60%</div>
+      <div class="stat-label">of digital footprint is reducible with simple changes</div>
+      <div class="stat-src">IEA Electricity Report, 2023</div>
+    </div>
+  </section>
+
+  <section class="section" id="how">
+    <p class="section-label">how it works</p>
+    <h2 class="section-heading">Three steps from login to action plan</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">01 —</div>
+        <div>
+          <div class="step-title">Connect your Google account</div>
+          <div class="step-desc">Read-only OAuth access. We see Gmail headers, Drive metadata, and storage totals — never email content. One account covers all linked devices.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">02 —</div>
+        <div>
+          <div class="step-title">We calculate your digital footprint</div>
+          <div class="step-desc">The carbon engine maps your usage against peer-reviewed emission factors from IEA, the Shift Project, and Green Algorithms. Everything broken down by category.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">03 —</div>
+        <div>
+          <div class="step-title">Get a ranked action plan</div>
+          <div class="step-desc">Not generic tips — specific, quantified recommendations sorted by CO₂ saved per unit of effort. Biggest wins first, every time.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="features-grid" style="margin-top: 4rem;">
+      <div class="feature-cell">
+        <div class="feature-icon">✉</div>
+        <div class="feature-title">Gmail analysis</div>
+        <div class="feature-desc">Volume sent, received, spam count, and storage. Thirty days of mail translated into grams of CO₂.</div>
+      </div>
+      <div class="feature-cell">
+        <div class="feature-icon">☁</div>
+        <div class="feature-title">Drive & cloud storage</div>
+        <div class="feature-desc">Idle data costs energy 24/7. We surface how much your Drive is costing in real emission terms.</div>
+      </div>
+      <div class="feature-cell">
+        <div class="feature-icon">⬡</div>
+        <div class="feature-title">Multi-device report</div>
+        <div class="feature-desc">One Google account, every device. Phone and laptop combined into a single aggregated report.</div>
+      </div>
+      <div class="feature-cell">
+        <div class="feature-icon">↗</div>
+        <div class="feature-title">Ranked action plan</div>
+        <div class="feature-desc">Recommendations sorted by grams saved. Easiest and highest-impact changes always come first.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="categories" style="border-top: 1px solid var(--border);">
+    <p class="section-label">what we measure</p>
+    <h2 class="section-heading">Six categories, one complete picture</h2>
+    <div class="cat-grid">
+      <div class="cat-card">
+        <span class="cat-tag">email</span>
+        <div class="cat-name">Gmail activity</div>
+        <div class="cat-factor">4g</div>
+        <div class="cat-unit">CO₂e per email sent</div>
+      </div>
+      <div class="cat-card">
+        <span class="cat-tag">storage</span>
+        <div class="cat-name">Cloud Drive</div>
+        <div class="cat-factor">3g</div>
+        <div class="cat-unit">CO₂e per GB / year</div>
+      </div>
+      <div class="cat-card">
+        <span class="cat-tag">device</span>
+        <div class="cat-name">Screen time</div>
+        <div class="cat-factor">36g</div>
+        <div class="cat-unit">CO₂e per laptop hour</div>
+      </div>
+      <div class="cat-card">
+        <span class="cat-tag">streaming</span>
+        <div class="cat-name">Video & audio</div>
+        <div class="cat-factor">55g</div>
+        <div class="cat-unit">CO₂e per HD hour</div>
+      </div>
+      <div class="cat-card">
+        <span class="cat-tag">AI usage</span>
+        <div class="cat-name">AI queries</div>
+        <div class="cat-factor">4.3g</div>
+        <div class="cat-unit">CO₂e per LLM query</div>
+      </div>
+      <div class="cat-card">
+        <span class="cat-tag">web</span>
+        <div class="cat-name">Search & browse</div>
+        <div class="cat-factor">0.2g</div>
+        <div class="cat-unit">CO₂e per search</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta-section">
+    <h2 class="cta-heading">
+      Ready to see your<br><em>real number?</em>
+    </h2>
+    <div class="cta-row">
+      
+        <a href="/dashboard" class="btn btn-green btn-hero">Open my dashboard</a>
+      
+        <a href="/login" class="btn btn-green btn-hero">Connect with Google</a>
+      
+      <a href="/api/demo" class="btn btn-outline btn-hero">Try the demo first</a>
+    </div>
+    <p class="cta-note">takes about 10 seconds &nbsp;·&nbsp; no card required &nbsp;·&nbsp; nothing stored</p>
+  </section>
+
+  <footer>
+    <div class="footer-logo">eco<span>bytes</span></div>
+    <p class="footer-note">Emission factors: IEA 2023 · Shift Project · BCG Digital Carbon · Green Algorithms · Read-only OAuth · No data retained</p>
+  </footer>
+
+</body>
+</html>

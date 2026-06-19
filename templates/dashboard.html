@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — EcoBytes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+  <nav>
+    <div class="logo">eco<span>bytes</span></div>
+    <div class="nav-right">
+      <div class="user-info">
+        {% if user.picture %}
+          <img src="{{ user.picture }}" alt="Profile" class="avatar">
+        {% else %}
+          <div class="avatar-fallback">{{ user.name[0] }}</div>
+        {% endif %}
+        <span class="user-name">{{ user.name }}</span>
+      </div>
+      <a href="/logout" class="btn btn-outline">Sign out</a>
+    </div>
+  </nav>
+
+  <main class="dashboard-container">
+    <header class="dashboard-header">
+      <h1>Your Digital Footprint</h1>
+      <p>Data synced from Google. Refreshed today.</p>
+    </header>
+
+    <div id="loading" class="loading-state">
+      <div class="spinner"></div>
+      <p>Analyzing your usage...</p>
+    </div>
+
+    <div id="dashboard-content" class="hidden">
+      <!-- Top Overview Cards -->
+      <section class="overview-grid">
+        <div class="card glass">
+          <h2 class="card-title">Eco Score</h2>
+          <div class="score-display">
+            <div class="score-circle" id="score-circle">
+              <span id="score-grade">--</span>
+            </div>
+            <div class="score-details">
+              <div class="score-number"><span id="score-value">0</span> / 100</div>
+              <div class="score-label" id="score-label">Calculating</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card glass">
+          <h2 class="card-title">Monthly Emissions</h2>
+          <div class="stat-main">
+            <span id="total-kg">--</span> <span class="unit">kg CO₂e</span>
+          </div>
+          <p class="stat-sub">Projected yearly: <span id="yearly-kg">--</span> kg</p>
+        </div>
+
+        <div class="card glass">
+          <h2 class="card-title">Data Sources</h2>
+          <ul class="source-list">
+            <li><span class="dot gmail"></span> Gmail (~<span id="gmail-msgs">--</span> msgs)</li>
+            <li><span class="dot drive"></span> Drive (<span id="drive-gb">--</span> GB)</li>
+            <li><span class="dot devices"></span> Connected Devices</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- Main Breakdown & Recommendations -->
+      <div class="main-grid">
+        
+        <!-- NEW GOAL SECTION -->
+        <section class="goal-section" style="grid-column: 1 / -1;">
+          <div class="card glass">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+              <h2 class="card-title" style="margin-bottom: 0;">Goal Progress</h2>
+              <button onclick="document.getElementById('goal-modal').classList.remove('hidden')" class="btn btn-outline" style="font-size: 0.75rem;">Set New Goal</button>
+            </div>
+            
+            <div id="goal-container">
+              <!-- Dynamically populated if goal exists -->
+              <p style="color: var(--text-muted); font-size: 0.9rem;">No active goals. Set a reduction target to track your progress!</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="breakdown-section">
+          <div class="card glass stretch">
+            <h2 class="card-title">Emission Breakdown</h2>
+            <div class="chart-container" id="breakdown-bars">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+        </section>
+
+        <section class="recs-section">
+          <div class="card glass stretch">
+            <h2 class="card-title">Optimization Plan</h2>
+            <div class="recs-list" id="recs-list">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+        </section>
+
+        <!-- PEER COMPARISON & OFFSET -->
+        <section class="action-section" style="display: flex; flex-direction: column; gap: 1.5rem;">
+          
+          <div class="card glass">
+            <h2 class="card-title">Peer Comparison</h2>
+            <p id="peer-label" style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem;">Loading benchmark...</p>
+            <div style="font-size: 2rem; font-family: monospace; font-weight: 700; color: var(--text-main);" id="peer-stat">
+              --
+            </div>
+            <p id="peer-message" style="margin-top: 0.5rem; font-size: 0.9rem; color: var(--green-accent);"></p>
+          </div>
+
+          <div class="card glass" style="background: linear-gradient(145deg, rgba(46, 125, 82, 0.2), rgba(20,20,20,0.6)); border-color: var(--green);">
+            <h2 class="card-title" style="color: var(--green-accent);">Take Action</h2>
+            <p style="font-size: 0.9rem; line-height: 1.5; margin-bottom: 1rem;">Neutralize your digital footprint immediately by purchasing verified carbon offsets (Gold Standard / Verra).</p>
+            <button onclick="openOffsetModal()" class="btn btn-green" style="width: 100%; text-align: center; font-size: 1rem; padding: 0.75rem; background: var(--green-accent); color: black;">Offset My Footprint</button>
+          </div>
+
+        </section>
+
+        <!-- HISTORY CHART -->
+        <section class="history-section" style="grid-column: 1 / -1;">
+          <div class="card glass stretch">
+            <h2 class="card-title">Historical Trends</h2>
+            <div style="position: relative; height: 250px; width: 100%;">
+              <canvas id="historyChart"></canvas>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <!-- Goal Modal -->
+    <div id="goal-modal" class="hidden" style="position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 200; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(5px);">
+      <div class="glass" style="max-width: 400px; width: 100%;">
+        <h2 style="margin-bottom: 1rem;">Set Reduction Goal</h2>
+        <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.5rem;">Target a percentage reduction from your current footprint over the next 3 months.</p>
+        <div style="margin-bottom: 1.5rem;">
+          <label style="display: block; font-size: 0.85rem; margin-bottom: 0.5rem;">Reduction Percentage</label>
+          <select id="goal-pct" style="width: 100%; padding: 0.5rem; background: #222; border: 1px solid var(--border); color: white; border-radius: 4px;">
+            <option value="5">5%</option>
+            <option value="10" selected>10%</option>
+            <option value="20">20%</option>
+            <option value="30">30%</option>
+          </select>
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 1rem;">
+          <button onclick="document.getElementById('goal-modal').classList.add('hidden')" class="btn btn-outline">Cancel</button>
+          <button id="save-goal-btn" class="btn" style="background: var(--green-accent); color: black;">Save Goal</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Offset Modal -->
+    <div id="offset-modal" class="hidden" style="position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 200; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(5px);">
+      <div class="glass" style="max-width: 450px; width: 100%;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
+          <h2>Offset Checkout</h2>
+          <button onclick="document.getElementById('offset-modal').classList.add('hidden')" style="background:none; border:none; color:white; font-size: 1.5rem; cursor: pointer;">&times;</button>
+        </div>
+        
+        <div style="background: rgba(0,0,0,0.3); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+            <span>Current Monthly Emissions:</span>
+            <span id="offset-kg" style="font-family: monospace; font-weight: bold;">-- kg</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; color: var(--text-muted); font-size: 0.85rem;">
+            <span>Verified Offset Rate:</span>
+            <span>$15.00 / tonne</span>
+          </div>
+          <hr style="border: 1px solid var(--border); margin: 0.75rem 0;">
+          <div style="display: flex; justify-content: space-between; font-size: 1.2rem; font-weight: bold; color: var(--green-accent);">
+            <span>Total Cost:</span>
+            <span id="offset-price">$--</span>
+          </div>
+        </div>
+
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.5rem;">
+          Your funds will be routed to a Gold Standard certified wind energy project in India. 
+          <em>(Mock checkout flow)</em>
+        </p>
+
+        <button class="btn" style="width: 100%; background: #6772E5; color: white; padding: 0.8rem; font-size: 1rem;" onclick="alert('Mock Stripe Checkout Launched!')">
+          Pay with Stripe
+        </button>
+      </div>
+    </div>
+
+  </main>
+
+  <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+</body>
+</html>

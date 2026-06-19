@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Setup Your Profile — EcoBytes</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+  <style>
+    .onboarding-wrap {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+    .wizard-card {
+      max-width: 500px;
+      width: 100%;
+    }
+    .step-title {
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+    }
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+    .form-label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+    .device-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+    }
+    .device-label {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      padding: 0.75rem;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .device-label input:checked + span {
+      color: var(--green-accent);
+      font-weight: 500;
+    }
+    input[type="number"], select {
+      width: 100%;
+      padding: 0.75rem;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text-main);
+      font-family: inherit;
+    }
+    .btn-full {
+      width: 100%;
+      padding: 0.8rem;
+      font-size: 1rem;
+      background: var(--green);
+      color: var(--text-main);
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .btn-full:hover { background: var(--green-accent); color: #000; }
+  </style>
+</head>
+<body>
+
+  <div class="onboarding-wrap">
+    <div class="glass wizard-card">
+      <h2 class="step-title">Let's refine your footprint</h2>
+      <p style="color: var(--text-muted); margin-bottom: 2rem; font-size: 0.9rem;">
+        We pull your exact email and drive data from Google. To calculate accurate streaming and device usage, answer 3 quick questions.
+      </p>
+
+      <form action="/onboarding" method="POST">
+        <div class="form-group">
+          <label class="form-label">1. What devices do you use daily?</label>
+          <div class="device-grid">
+            <label class="device-label"><input type="checkbox" name="devices" value="laptop" checked> <span>Laptop</span></label>
+            <label class="device-label"><input type="checkbox" name="devices" value="phone" checked> <span>Smartphone</span></label>
+            <label class="device-label"><input type="checkbox" name="devices" value="desktop"> <span>Desktop PC</span></label>
+            <label class="device-label"><input type="checkbox" name="devices" value="tablet"> <span>Tablet</span></label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">2. Average screen time per day (total hours)?</label>
+          <input type="number" name="hours" min="1" max="24" step="0.5" value="6" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">3. YouTube / Streaming hours per day?</label>
+          <input type="number" name="youtube_hours" min="0" max="24" step="0.5" value="2" required>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Energy Region (for emissions factor)</label>
+          <select name="region">
+            <option value="Global">Global Average</option>
+            <option value="US">United States (Greener Grid)</option>
+            <option value="EU">Europe (Greenest Grid)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Country (for Peer Comparison)</label>
+          <select name="country">
+            <option value="US">United States</option>
+            <option value="UK">United Kingdom</option>
+            <option value="IN">India</option>
+            <option value="Global">Other (Global Avg)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Industry</label>
+          <select name="industry">
+            <option value="Tech">Technology / Software</option>
+            <option value="Finance">Finance / Consulting</option>
+            <option value="Education">Education</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+
+        <button type="submit" class="btn-full">Save & Generate Dashboard</button>
+      </form>
+    </div>
+  </div>
+
+</body>
+</html>
